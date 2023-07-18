@@ -7,4 +7,4 @@ ready and support Seraphis on day 1 when Monero switches.
 Seraphis is still a couple years away and evolving, but we'll track the
 changes and use the time to develop a solid wallet.
 
-![seraphis-gopher](https://github.com/dimalinux/gopherphis/assets/787418/88618e80-7379-47f4-ba5a-d0c05742027d)
+![seraphis-gopher](https://github.com/dimalinux/gopherphis/assets/787418/e1e6189e-96e2-4f2c-bace-cdb2e9a1340f)
