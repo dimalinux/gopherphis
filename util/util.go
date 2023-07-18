@@ -1,3 +1,5 @@
+// Package util is for general purpose functions that can be useful for any
+// package in the repo.
 package util
 
 // ReverseSlice returns a slice of the same type with the elements in the
