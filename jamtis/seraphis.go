@@ -2,6 +2,8 @@ package jamtis
 
 import (
 	ed25519 "filippo.io/edwards25519"
+
+	"github.com/dimalinux/gopherphis/mcrypto"
 )
 
 func getUPoint() *ed25519.Point {
@@ -35,8 +37,8 @@ func genSeraphisSpendKey(viewBalanceKey []byte, masterKey []byte) ([]byte, error
 	// Normally, you would call SetBytesWithClamping to get the reduced values,
 	// but it has additional bit modifications that are incompatible with
 	// Monero, so we do the reduce ourselves and call SetCanonicalBytes instead.
-	viewBalanceKey = scReduce32(viewBalanceKey)
-	masterKey = scReduce32(masterKey)
+	viewBalanceKey = mcrypto.ScReduce32(viewBalanceKey)
+	masterKey = mcrypto.ScReduce32(masterKey)
 
 	mkScalar, err := new(ed25519.Scalar).SetCanonicalBytes(masterKey)
 	if err != nil {
