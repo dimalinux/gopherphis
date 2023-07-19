@@ -3,14 +3,21 @@ module github.com/dimalinux/gopherphis
 go 1.20
 
 require (
+	ekyu.moe/cryptonight v0.3.0
 	filippo.io/edwards25519 v1.0.0
+	github.com/btcsuite/btcd/btcutil v1.1.3
+	github.com/ethereum/go-ethereum v1.12.0
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/crypto v0.11.0
 )
 
 require (
+	github.com/aead/skein v0.0.0-20160722084837-9365ae6e95d2 // indirect
+	github.com/btcsuite/btcd/btcec/v2 v2.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/kr/pretty v0.3.1 // indirect
+	github.com/dchest/blake256 v1.0.0 // indirect
+	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
+	github.com/holiman/uint256 v1.2.2-0.20230321075855-87b91420868c // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	golang.org/x/sys v0.10.0 // indirect

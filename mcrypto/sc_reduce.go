@@ -1,4 +1,4 @@
-package jamtis
+package mcrypto
 
 import (
 	"math/big"
@@ -19,9 +19,9 @@ func init() {
 	}
 }
 
-// scReduce32 reduces the 32-byte little endian input s by computing and returning
+// ScReduce32 reduces the 32-byte little endian input s by computing and returning
 // s mod l, where l is ed25519 curve order prime.
-func scReduce32(s32 []byte) []byte {
+func ScReduce32(s32 []byte) []byte {
 	scalar := new(big.Int).SetBytes(util.ReverseSlice(s32[:]))
 	reduced := util.ReverseSlice(new(big.Int).Mod(scalar, edCurveOrder).Bytes())
 	var reduced32 [32]byte

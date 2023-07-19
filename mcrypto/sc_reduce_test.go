@@ -1,4 +1,6 @@
-package jamtis
+// Package mcrypto is for crypto methods shared by both legacy Monero
+// and Seraphis protocols.
+package mcrypto
 
 import (
 	"encoding/hex"
@@ -8,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_scReduce32(t *testing.T) {
+func Test_ScReduce32(t *testing.T) {
 	type testData struct {
 		in  string
 		out string
@@ -102,7 +104,7 @@ func Test_scReduce32(t *testing.T) {
 		s, err := hex.DecodeString(tt.in)
 		require.NoError(t, err)
 		require.Len(t, s, 32)
-		reduced := scReduce32(s)
+		reduced := ScReduce32(s)
 		assert.Equal(t, tt.out, hex.EncodeToString(reduced[:]))
 	}
 }
