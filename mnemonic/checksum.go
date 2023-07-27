@@ -32,7 +32,7 @@ func GetChecksumWord(mnemonic []string) (string, *WordList, error) {
 // should probably be passing a 24 seed slice (or in some cases 12), the code
 // only requires that you pass at least one seed. The checksum word is always
 // one of the passed mnemonic seeds.
-func (w *WordList) GetChecksumWord(mnemonic []string) (string, error) {
+func (wl *WordList) GetChecksumWord(mnemonic []string) (string, error) {
 	if len(mnemonic) == 0 {
 		// API misuse, so panic
 		panic("no seeds to compute checksum from")
@@ -40,20 +40,38 @@ func (w *WordList) GetChecksumWord(mnemonic []string) (string, error) {
 
 	hash := crc32.NewIEEE()
 	for _, word := range mnemonic {
-		if !w.HasWord(word) {
+		if !wl.HasWord(word) {
 			return "", errSeedNotInList
 		}
-		_, _ = hash.Write([]byte(prefix(word, w.PrefixSz)))
+		_, _ = hash.Write([]byte(prefix(word, wl.PrefixSz)))
 	}
 	sum := hash.Sum32()
 	idx := sum % uint32(len(mnemonic))
 	return mnemonic[idx], nil
 }
 
-// HasWord returns whether the passed word is in the current language's
+// HasWord returns whether the passed seed is in the current language's
 // wordlist. Only the first N symbols are checked, where N is PrefixSz of the
 // given language's settings.
-func (w *WordList) HasWord(word string) bool {
-	_, ok := w.PrefixMap[prefix(word, w.PrefixSz)]
+func (wl *WordList) HasWord(seed string) bool {
+	_, ok := wl.PrefixMap[prefix(seed, wl.PrefixSz)]
 	return ok
+}
+
+// HasWords returns whether all the passed words are in the current language's
+// wordlist, based on the prefix N symbols, as well as the number of words that
+// were an exact match.
+func (wl *WordList) HasWords(seeds []string) (bool, int) {
+	exactCount := 0
+	for _, s := range seeds {
+		index, ok := wl.PrefixMap[prefix(s, wl.PrefixSz)]
+		if !ok {
+			return false, -1
+		}
+		if s == wl.Entries[index] {
+			exactCount++
+		}
+	}
+
+	return true, exactCount
 }

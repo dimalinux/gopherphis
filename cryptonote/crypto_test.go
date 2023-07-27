@@ -1,4 +1,4 @@
-package mnemonic
+package cryptonote
 
 import (
 	"encoding/hex"
@@ -126,7 +126,7 @@ func TestPrivateSpendKey_View(t *testing.T) {
 		psk := &PrivateSpendKey{
 			skScalar,
 		}
-		vk, err := psk.ViewKey()
+		vk, err := psk.PrivateViewKey()
 		require.NoError(t, err)
 		require.Equal(t, tt.viewKey, strings.TrimPrefix(vk.String(), "0x"))
 	}

@@ -1,7 +1,9 @@
-// Package mnemonic is code for seed and address handing before Seraphis.
+// Package mnemonic is for seed handling in the way that was preferred before
+// Seraphis, but can still be used with Seraphis/Jamtis.
 package mnemonic
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -68,12 +70,46 @@ var WordLists = []*WordList{
 
 // FindIndex32 returns the index of the passed word. This method should
 // only be used when you are certain that the word exists in the list.
-func (w *WordList) FindIndex32(word string) uint32 {
-	p := prefix(word, w.PrefixSz)
-	i, ok := w.PrefixMap[p]
+func (wl *WordList) FindIndex32(word string) uint32 {
+	p := prefix(word, wl.PrefixSz)
+	i, ok := wl.PrefixMap[p]
 	if !ok {
 		panic("word not found")
 	}
 
 	return i
+}
+
+// FindLanguage returns the wordlist that matches the passed seeds. When
+// we don't know the language, each word must be an exact match, as you
+// will find lists whose seed prefixes will match multiple languages.
+func FindLanguage(seeds []string) (*WordList, error) {
+	if len(seeds) == 0 {
+		return nil, errors.New("seed list is empty")
+	}
+
+	closestMatchCount := 0
+	var closestMatch *WordList
+
+	for _, wl := range WordLists {
+		hasPrefixes, exactMatchCount := wl.HasWords(seeds)
+		if !hasPrefixes {
+			continue
+		}
+
+		if exactMatchCount == len(seeds) {
+			return wl, nil
+		}
+
+		if exactMatchCount > closestMatchCount {
+			closestMatch = wl
+			closestMatchCount = exactMatchCount
+		}
+	}
+
+	if closestMatch != nil {
+		return closestMatch, nil
+	}
+
+	return nil, errors.New("could not find language with all mnemonic seeds")
 }
