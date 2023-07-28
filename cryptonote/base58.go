@@ -1,4 +1,4 @@
-package mnemonic
+package cryptonote
 
 import (
 	"fmt"

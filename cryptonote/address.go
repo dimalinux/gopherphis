@@ -1,4 +1,4 @@
-package mnemonic
+package cryptonote
 
 import (
 	"bytes"
@@ -64,7 +64,7 @@ func NewAddress(addrStr string, net Network) (*Address, error) {
 		return nil, err
 	}
 
-	return addr, addr.ValidateEnv(net)
+	return addr, addr.ValidateNet(net)
 }
 
 func (a *Address) String() string {
@@ -131,21 +131,21 @@ func (a *Address) Equal(b *Address) bool {
 	return a.decoded == b.decoded
 }
 
-// ValidateEnv validates that the monero network matches the passed environment.
+// ValidateNet validates that the monero network matches the passed network.
 // This validation can't be performed when decoding JSON, as the environment is
 // not known at that time.
-func (a *Address) ValidateEnv(env Network) error {
+func (a *Address) ValidateNet(net Network) error {
 	if a == nil || a.decoded == new(Address).decoded {
 		return errAddressNotInitialized
 	}
 
 	switch a.Network() {
 	case Mainnet:
-		if env != Mainnet {
+		if net != Mainnet {
 			return errInvalidPrefixGotMainnet
 		}
 	case Stagenet:
-		if env != Stagenet {
+		if net != Stagenet {
 			return errInvalidPrefixGotStagenet
 		}
 	case Testnet:
@@ -168,11 +168,19 @@ func (kp *PublicKeyPair) Address(net Network) *Address {
 	address := new(Address)
 
 	var prefix byte
-	switch net {
-	case Mainnet:
+	switch {
+	case net == Mainnet && !kp.isSubAddress:
 		prefix = netPrefixStdAddrMainnet
-	case Stagenet:
+	case net == Mainnet && kp.isSubAddress:
+		prefix = netPrefixSubAddrMainnet
+	case net == Stagenet && !kp.isSubAddress:
 		prefix = netPrefixStdAddrStagenet
+	case net == Stagenet && kp.isSubAddress:
+		prefix = netPrefixSubAddrStagenet
+	case net == Testnet && !kp.isSubAddress:
+		prefix = netPrefixStdAddrTestnet
+	case net == Testnet && kp.isSubAddress:
+		prefix = netPrefixSubAddrTestnet
 	default:
 		panic(fmt.Sprintf("unhandled net %s", net))
 	}

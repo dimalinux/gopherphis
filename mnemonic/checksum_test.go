@@ -6,10 +6,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Test dataset was generated using monero-wallet-rpc's restore_deterministic_wallet
-// method with 24 words, then grabbing the 25th seed in the response. The seeds
-// are all at index multiples of 65 from each language and all generate the same
-// pre-seraphis spend key:
+// Test dataset was generated using monero-wallet-rpc's
+// restore_deterministic_wallet method with 24 words, then grabbing the 25-word
+// seed phrase from the response. The seeds are all at index multiples of 65
+// from each language and all generate the same key:
 // bfdd3f0a82de3f0a45df3f0a08e03f0acbe03f0a8ee13f0a51e23f0a14e33f0a
 //
 //nolint:misspell,lll
