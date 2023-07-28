@@ -1,3 +1,5 @@
+// Package cryptonote is for libraries to manage the keys and addresses
+// used before Jamtis.
 package cryptonote
 
 import (
@@ -14,6 +16,12 @@ import (
 	"github.com/dimalinux/gopherphis/mcrypto"
 )
 
+const (
+	// KeySize is the size, in bytes, of both public and private keys
+	// used in cryptonote.
+	KeySize = 32
+)
+
 var (
 	errInvalidInput = errors.New("input is not 32 bytes")
 )
@@ -27,7 +35,7 @@ type PrivateKeyPair struct {
 // NewPrivateKeyPairFromBytes returns a new PrivateKeyPair given the canonical byte representation of
 // a private spend and view key.
 func NewPrivateKeyPairFromBytes(skBytes, vkBytes []byte) (*PrivateKeyPair, error) {
-	if len(skBytes) != privateKeySize || len(vkBytes) != privateKeySize {
+	if len(skBytes) != KeySize || len(vkBytes) != KeySize {
 		return nil, errInvalidInput
 	}
 
@@ -123,7 +131,7 @@ type PrivateSpendKey struct {
 
 // NewPrivateSpendKey returns a new PrivateSpendKey from the given canonically-encoded scalar.
 func NewPrivateSpendKey(b []byte) (*PrivateSpendKey, error) {
-	if len(b) != privateKeySize {
+	if len(b) != KeySize {
 		return nil, errInvalidInput
 	}
 
