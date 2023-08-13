@@ -1,5 +1,5 @@
 GOPATH ?= $(shell go env GOPATH)
-LINTER_VERSION = "v1.53.3"
+LINTER_VERSION = "1.54.1"
 LINTER = $(GOPATH)/bin/golangci-lint
 
 .PHONY: all
@@ -15,14 +15,15 @@ format:
 # https://golangci-lint.run/usage/install/#local-installation
 $(LINTER):
 	curl -sSfL "https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh" \
-		| sh -s -- -b "$(GOPATH)/bin" "$(LINTER_VERSION)"
+		| sh -s -- -b "$(GOPATH)/bin" "v$(LINTER_VERSION)"
 
 # If the version test below fails, delete the executable so that it can be
 # reinstalled with the correct version.
 .PHONY: lint
 lint: $(LINTER)
-	test "v$$("$(LINTER)" version --format=short)" = $(LINTER_VERSION)
-	"$(GOPATH)/bin/golangci-lint" run
+	@echo test "$$("$(LINTER)" version --format=short)" = "$(LINTER_VERSION)" || \
+		($$(@echo "Please delete the out-of-date $(LINTER) executable") && false)
+	"$(LINTER)" run
 
 .PHONY: test
 test: 
