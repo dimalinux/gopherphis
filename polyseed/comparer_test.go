@@ -6,6 +6,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func Test_prefix(t *testing.T) {
+	require.Equal(t, "abst", prefix("abstract"))
+	require.Equal(t, "ámbi", prefix("ámbito"))
+	require.Equal(t, "élèv", prefix("élève"))
+	require.Equal(t, "世界", prefix("世界")) // 2 symbols in, 2 symbols out
+	require.Equal(t, "うけたま", prefix("うけたまわる"))
+	require.Equal(t, "🐟🦞🐙🐳", prefix("🐟🦞🐙🐳🦐🦑"))
+}
+
 func Test_comparePrefix(t *testing.T) {
 	// equal, shorter than prefix
 	require.Zero(t, comparePrefix("a", "a"))
@@ -35,6 +44,12 @@ func Test_removeAccents(t *testing.T) {
 
 	// Russian е is not equal to the French e
 	require.NotEqual(t, removeAccents("é"), removeAccents("ё"))
+
+	// Invalid UTF-8 strings. This just shows the current behavior.
+	// The goal was to get code coverage on the error handling, but
+	// the error case is probably not reachable.
+	require.Equal(t, "�", removeAccents("\x80"))
+	require.Equal(t, "��", removeAccents("\xC0\x80"))
 }
 
 func Test_compareNoAccent(t *testing.T) {

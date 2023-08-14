@@ -31,4 +31,6 @@ func TestSeedData_Crypt(t *testing.T) {
 
 	require.NotEqual(t, key1, key2)
 	require.Equal(t, key1, key3)
+
+	sd.Clear()
 }

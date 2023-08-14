@@ -1,7 +1,6 @@
 package polyseed
 
 const (
-	bitsPerWord      = 11
 	numChecksumWords = 1
 
 	keyBitsPerWord = 10
@@ -10,8 +9,12 @@ const (
 	bitsPerByte = 8
 )
 
-type gfPoly struct {
+type poly struct {
 	coeff [NumSeedWords]uint16
+}
+
+var mul2Table = [8]uint16{
+	5, 7, 1, 3, 13, 15, 9, 11,
 }
 
 func uint16Mul2(x uint16) uint16 {
@@ -21,7 +24,9 @@ func uint16Mul2(x uint16) uint16 {
 	return mul2Table[x%8] + 16*((x-1024)/8)
 }
 
-func (p *gfPoly) calcChecksum() uint16 {
+//func newGfPoly
+
+func (p *poly) calcChecksum() uint16 {
 	// Horner's method at x = 2
 	sum := p.coeff[NumSeedWords-1]
 	for i := NumSeedWords - 2; i >= 0; i-- {
@@ -30,22 +35,11 @@ func (p *gfPoly) calcChecksum() uint16 {
 	return sum
 }
 
-func (p *gfPoly) ValidChecksum() bool {
+func (p *poly) ValidChecksum() bool {
 	return p.calcChecksum() == 0
 }
 
-var mul2Table = [8]uint16{
-	5, 7, 1, 3, 13, 15, 9, 11,
-}
-
-func min(a, b uint) uint {
-	if a < b {
-		return a
-	}
-	return b
-}
-
-func dataToPoly(data *SeedData) *gfPoly {
+func dataToPoly(data *SeedData) *poly {
 
 	extraVal := (data.features << DateBits) | data.birthday
 	extraBits := uint(featureBits + DateBits)
@@ -55,7 +49,7 @@ func dataToPoly(data *SeedData) *gfPoly {
 	secretBits := uint(bitsPerByte)
 	seedRemBits := uint(NumSecretBits - bitsPerByte)
 
-	poly := &gfPoly{}
+	poly := &poly{}
 
 	for i := 0; i < dataWords; i++ {
 		for wordBits < keyBitsPerWord {
@@ -97,7 +91,7 @@ func dataToPoly(data *SeedData) *gfPoly {
 	return poly
 }
 
-func (p *gfPoly) ToSeedData() *SeedData {
+func (p *poly) ToSeedData() *SeedData {
 	data := &SeedData{}
 
 	var extraVal, extraBits, wordBits, secretIdx, secretBits, seedBits uint

@@ -46,9 +46,7 @@ func (sd *SeedData) Clear() {
 	sd.birthday = 0
 	sd.features = 0
 	sd.checksum = 0
-	for i := 0; i < KeySizeBytes; i++ {
-		sd.secret[i] = 0
-	}
+	clear(sd.secret[:])
 }
 
 // BirthDate returns the wallet's birthday in Unix epoch time.

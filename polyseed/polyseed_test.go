@@ -46,3 +46,38 @@ func TestCreateSeedData(t *testing.T) {
 	key = hex.EncodeToString(seedData.KeyGen())
 	require.Equal(t, expectedKeyWithPass, key)
 }
+
+func changeDefaultCoinForTest(t *testing.T, coin Coin) {
+	SetPackageCoin(coin)
+	t.Cleanup(func() {
+		SetPackageCoin(MoneroCoin)
+	})
+}
+
+func TestCreateSeedData_AEON(t *testing.T) {
+	const (
+		seedStr             = "적성 큰딸 그토록 순수 매달 불꽃 점점 개성 상업 부장 놀이 편지 시각 발음 사탕 이념" //nolint:lll
+		password            = "qwerty123"
+		expectedKeyNoPass   = "140660311eb94ffbed063c796fa9c37ee5433dabda716ddee18ca957bfa32ab7"
+		expectedKeyWithPass = "99d73e3628b8959dbb1536d516fcfe6722b43f666d0debd68ce34ec1c60953a4"
+	)
+
+	changeDefaultCoinForTest(t, AEONCoin)
+
+	seeds := strings.Split(seedStr, " ")
+	seedData, err := CreateSeedData(seeds)
+	require.NoError(t, err)
+
+	// test unencrypted key generation
+	key := hex.EncodeToString(seedData.KeyGen())
+	require.Equal(t, expectedKeyNoPass, key)
+
+	// encrypt
+	require.False(t, seedData.IsEncrypted())
+	seedData.Crypt(password)
+	require.True(t, seedData.IsEncrypted())
+
+	// test generated key after encryption
+	key = hex.EncodeToString(seedData.KeyGen())
+	require.Equal(t, expectedKeyWithPass, key)
+}

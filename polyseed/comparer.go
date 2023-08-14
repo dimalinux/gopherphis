@@ -10,31 +10,42 @@ import (
 )
 
 const (
-	// NumRunePrefix is the maximum number of utf-8 symbols that are compared
+	// NumPrefixSymbols is the maximum number of utf-8 symbols that are compared
 	// when matching a seed word with a polyseed Lang entry when the language's
 	// HasPrefix field set to true.
-	NumRunePrefix = 4
+	NumPrefixSymbols = 4
 )
 
-// prefix returns the first 4 runes (UTF-8 symbols) of the passed word as a
-// string. If the word is less than 4 runes, the word is returned unchanged.
+// prefix returns the first UTF-8 symbols of the passed word as a string. If the
+// word is less than 4 symbols, the word is returned unchanged.
 func prefix(word string) string {
-	wordSymbols := []rune(word)
-	if len(wordSymbols) > NumRunePrefix {
-		word = string(wordSymbols[:NumRunePrefix])
+	// Accented characters can be spread across more than one rune, so we have
+	// to normalize.
+	var p []byte
+	var symbolIter norm.Iter
+	symbolIter.InitString(norm.NFD, word)
+
+	i := 0
+	for !symbolIter.Done() {
+		p = append(p, symbolIter.Next()...)
+		i++
+		if i >= NumPrefixSymbols {
+			break
+		}
 	}
-	return word
+
+	return string(p)
 }
 
 // removeAccents replaces symbols with accents with their equivalent symbols without
 // the accent. Example: "peñón" => "penon".
 func removeAccents(s string) string {
 	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
-	output, _, err := transform.String(t, s)
+	noAccents, _, err := transform.String(t, s)
 	if err != nil {
-		panic(err) // not reachable
+		return s // doesn't appear to be reachable even with bad UTF-8 input
 	}
-	return output
+	return noAccents
 }
 
 // comparePrefix compares two strings ignoring any values after the 4th UTF-8

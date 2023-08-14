@@ -69,8 +69,8 @@ func CreateNewSeedPhrase(lang *Lang) ([]string, error) {
 	return lang.getWords(poly.coeff[:]), nil
 }
 
-// CreateSeedData creates a seed phrase with the key bits initialized with
-// cryptographically random data.
+// CreateSeedData initializes a SeedData object with the passed seed phrase
+// and returns it.
 func CreateSeedData(seedWords []string) (*SeedData, error) {
 	if len(seedWords) != NumSeedWords {
 		return nil, ErrNumWords
@@ -81,11 +81,12 @@ func CreateSeedData(seedWords []string) (*SeedData, error) {
 		return nil, err
 	}
 
-	poly := &gfPoly{}
+	poly := &poly{}
 	copy(poly.coeff[:], indexes)
-	// TODO: Zero indices?
+	clear(indexes)
 
-	// finalize polynomial. TODO: isn't the coin value derived from the seeds?
+	// Finalize the polynomial. The coin value needs to be xor'ed before
+	// checksum validation.
 	poly.coeff[numChecksumWords] ^= uint16(defaultCoin)
 
 	if !poly.ValidChecksum() {
