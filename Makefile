@@ -1,5 +1,5 @@
 GOPATH ?= $(shell go env GOPATH)
-LINTER_VERSION = "1.54.1"
+LINTER_VERSION = "1.54.2"
 LINTER = $(GOPATH)/bin/golangci-lint
 
 .PHONY: all

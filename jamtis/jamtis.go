@@ -8,7 +8,7 @@ import (
 	ed25519 "filippo.io/edwards25519"
 	"golang.org/x/crypto/blake2b"
 	"golang.org/x/crypto/curve25519"
-	"golang.org/x/crypto/twofish"
+	"golang.org/x/crypto/twofish" //nolint:staticcheck
 
 	"github.com/dimalinux/gopherphis/mcrypto"
 )
@@ -21,11 +21,14 @@ const (
 	hashKeyJamtisSpendKeyExtensionU      = "jamtis_spendkey_extension_u"
 )
 
+// Address holds the binary fields that make up a Jamtis user address (a
+// destination for funds). In the C++ code, this struct is called
+// JamtisDestinationV1.
 type Address struct {
-	K1  []byte
-	K2  []byte
-	K3  []byte
-	Tag []byte
+	K1  []byte // Spend Public Key (32 bytes) - k^j_g G + k^j_x X + k^j_u U + K_s
+	K2  []byte // View Public Key (32 bytes) - xk^j_a xK_fr
+	K3  []byte // DH Base key (32 bytes) - xk^j_a xK_ua
+	Tag []byte // Address tag (18 bytes, does not include tag hint)
 }
 
 func keyDerive1(key []byte, name string) ([]byte, error) {
@@ -163,19 +166,20 @@ func genJamtisAddressSpendKey(spendPubKey []byte, generateAddress []byte, j []by
 	// K_1 = k^j_g G + k^j_x X + k^j_u U + K_s
 
 	//k^j_u
-	addressExtensionKeyU, err := genJamtisSpendKeyExtension(hashKeyJamtisSpendKeyExtensionU, spendPubKey, generateAddress, j)
+	addrExtKeyU, err := genJamtisSpendKeyExtension(hashKeyJamtisSpendKeyExtensionU, spendPubKey, generateAddress, j)
 	if err != nil {
 		return nil, err
 	}
 
 	//k^j_x
-	addressExtensionKeyX, err := genJamtisSpendKeyExtension(hashKeyJamtisSpendKeyExtensionX, spendPubKey, generateAddress, j)
+	addrExtKeyX, err :=
+		genJamtisSpendKeyExtension(hashKeyJamtisSpendKeyExtensionX, spendPubKey, generateAddress, j)
 	if err != nil {
 		return nil, err
 	}
 
 	//k^j_g
-	addressExtensionKeyG, err := genJamtisSpendKeyExtension(hashKeyJamtisSpendKeyExtensionG, spendPubKey, generateAddress, j)
+	addrExtKeyG, err := genJamtisSpendKeyExtension(hashKeyJamtisSpendKeyExtensionG, spendPubKey, generateAddress, j)
 	if err != nil {
 		return nil, err
 	}
@@ -186,24 +190,24 @@ func genJamtisAddressSpendKey(spendPubKey []byte, generateAddress []byte, j []by
 	}
 
 	//k^j_u U + K_s
-	extendSeraphisSpendKey(addressExtensionKeyU, getUPoint(), extendedSeraphisSpendKey)
+	extendSeraphisSpendKey(extendedSeraphisSpendKey, addrExtKeyU, getUPoint())
 
 	//k^j_x X + (k^j_u U + K_s)
-	extendSeraphisSpendKey(addressExtensionKeyX, getXPoint(), extendedSeraphisSpendKey)
+	extendSeraphisSpendKey(extendedSeraphisSpendKey, addrExtKeyX, getXPoint())
 
 	//k^j_g G + (k^j_x X + k^j_u U + K_s)
-	extendedSeraphisSpendKey.Add(extendedSeraphisSpendKey, new(ed25519.Point).ScalarBaseMult(addressExtensionKeyG))
+	extendedSeraphisSpendKey.Add(extendedSeraphisSpendKey, new(ed25519.Point).ScalarBaseMult(addrExtKeyG))
 
 	return extendedSeraphisSpendKey.Bytes(), nil
 }
 
 func extendSeraphisSpendKey(
-	addressExtensionKey *ed25519.Scalar,
+	addrSpendKeyInOut *ed25519.Point,
+	addrExtKey *ed25519.Scalar,
 	generatorPt *ed25519.Point,
-	addressSpendKeyInOut *ed25519.Point,
 ) {
-	extenderKey := new(ed25519.Point).ScalarMult(addressExtensionKey, generatorPt)
-	addressSpendKeyInOut.Add(addressSpendKeyInOut, extenderKey)
+	extenderKey := new(ed25519.Point).ScalarMult(addrExtKey, generatorPt)
+	addrSpendKeyInOut.Add(addrSpendKeyInOut, extenderKey)
 }
 
 func blake2bHash(optionalKey []byte, hashSize int, inputs ...any) ([]byte, error) {
