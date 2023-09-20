@@ -6,7 +6,6 @@ package jamtis
 
 import (
 	ed25519 "filippo.io/edwards25519"
-	"golang.org/x/crypto/blake2b"
 	"golang.org/x/crypto/curve25519"
 	"golang.org/x/crypto/twofish" //nolint:staticcheck
 
@@ -14,6 +13,10 @@ import (
 )
 
 const (
+	// AddressIndexLen is the length of the jamtis sub-address identifier in
+	// bytes. This index is is generated randomly and not a sequential counter.
+	AddressIndexLen = 16
+
 	prefix                               = "monero"
 	hashKeyJamtisIndexExtensionGenerator = "jamtis_index_extension_generator"
 	hashKeyJamtisSpendKeyExtensionG      = "jamtis_spendkey_extension_g"
@@ -34,17 +37,11 @@ type Address struct {
 func keyDerive1(key []byte, name string) ([]byte, error) {
 	const prefix = "monero"
 
-	h, err := blake2b.New(32, key)
+	h32, err := blake2bHash(key, 32, []byte(prefix+name))
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = h.Write([]byte(prefix + name))
-	if err != nil {
-		return nil, err
-	}
-
-	h32 := h.Sum(nil)
 	h32[0] &= 0xf8
 	h32[31] &= 0x7f
 
@@ -53,53 +50,59 @@ func keyDerive1(key []byte, name string) ([]byte, error) {
 
 func secretDerive(key []byte, name string) ([]byte, error) {
 	const prefix = "monero"
-
-	h, err := blake2b.New(32, key)
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = h.Write([]byte(prefix + name))
-	if err != nil {
-		return nil, err
-	}
-
-	return h.Sum(nil), nil
+	return blake2bHash(key, 32, []byte(prefix+name))
 }
 
-func genViewBalanceKey(masterKey []byte) ([]byte, error) {
-	return keyDerive1(masterKey, "jamtis_view_balance_key")
+// GenViewBalancePrivKey generates the view balance private key which, in turn,
+// is a master key for generating the find-received, unlock-amounts and
+// generate-addresses keys.
+func GenViewBalancePrivKey(masterPrivKey []byte) ([]byte, error) {
+	return keyDerive1(masterPrivKey, "jamtis_view_balance_key")
 }
 
-func genUnlockAmountsKey(viewBalanceKey []byte) ([]byte, error) {
-	return keyDerive1(viewBalanceKey, "jamtis_unlock_amounts_key")
+// GenUnlockAmountsPrivKey generates the private key used to encrypt/decrypt the
+// amount of a transaction.
+func GenUnlockAmountsPrivKey(viewBalancePrivKey []byte) ([]byte, error) {
+	return keyDerive1(viewBalancePrivKey, "jamtis_unlock_amounts_key")
 }
 
-func genFindReceivedKey(viewBalanceKey []byte) ([]byte, error) {
-	return keyDerive1(viewBalanceKey, "jamtis_find_received_key")
-}
-
-func genGenAddressSecret(viewBalanceKey []byte) ([]byte, error) {
-	return secretDerive(viewBalanceKey, "jamtis_generate_address_secret")
-}
-
-func genCipherTagSecret(genAddressSecret []byte) ([]byte, error) {
-	return secretDerive(genAddressSecret, "jamtis_cipher_tag_secret")
-}
-
-func genUnlockAmountsPubKey(unlockAmountsPrivKey []byte) []byte {
+// GenUnlockAmountsPubKey generates the public key from the unlock amounts
+// private key.
+func GenUnlockAmountsPubKey(unlockAmountsPrivKey []byte) []byte {
 	var pubKey [32]byte
 	x25519ScalarMult(pubKey[:], unlockAmountsPrivKey, curve25519.Basepoint)
 	return pubKey[:]
 }
 
-func genFindReceivedPubKey(findReceivedPrivKey []byte, unlockAmountsPubKey []byte) []byte {
+// GenFindReceivedPrivKey generates the private key used to scan for received
+// transaction outputs.
+func GenFindReceivedPrivKey(viewBalancePrivKey []byte) ([]byte, error) {
+	return keyDerive1(viewBalancePrivKey, "jamtis_find_received_key")
+}
+
+// GenFindReceivedPubKey generates the public key from the find received private
+// key.
+func GenFindReceivedPubKey(findReceivedPrivKey []byte, unlockAmountsPubKey []byte) []byte {
 	var pubKey [32]byte
 	x25519ScalarMult(pubKey[:], findReceivedPrivKey, unlockAmountsPubKey)
 	return pubKey[:]
 }
 
-func genJamtisAddressV1(
+// GenGenAddressSecret generates the secret key used to generate a new address.
+// (Note: All addresses in Jamtis are subaddresses.)
+func GenGenAddressSecret(viewBalanceKey []byte) ([]byte, error) {
+	return secretDerive(viewBalanceKey, "jamtis_generate_address_secret")
+}
+
+// GenCipherTagSecret generates the cipher-tag secret which is used to
+// encrypt/create the address tag.
+func GenCipherTagSecret(genAddressSecret []byte) ([]byte, error) {
+	return secretDerive(genAddressSecret, "jamtis_cipher_tag_secret")
+}
+
+// GenJamtisAddressV1 generates the Jamtis address data for the passed address
+// index.
+func GenJamtisAddressV1(
 	spendPubKey []byte,
 	unlockAmountsPubKey []byte,
 	findReceivedPubKey []byte,
@@ -123,7 +126,7 @@ func genJamtisAddressV1(
 	K3 := make([]byte, 32)
 	x25519ScalarMult(K3, addressPrivKey, unlockAmountsPubKey)
 
-	cipherTagSecret, err := genCipherTagSecret(generateAddressPrivKey)
+	cipherTagSecret, err := GenCipherTagSecret(generateAddressPrivKey)
 	if err != nil {
 		return nil, err
 	}
@@ -208,36 +211,6 @@ func extendSeraphisSpendKey(
 ) {
 	extenderKey := new(ed25519.Point).ScalarMult(addrExtKey, generatorPt)
 	addrSpendKeyInOut.Add(addrSpendKeyInOut, extenderKey)
-}
-
-func blake2bHash(optionalKey []byte, hashSize int, inputs ...any) ([]byte, error) {
-	h, err := blake2b.New(hashSize, optionalKey)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, input := range inputs {
-		var inputBytes []byte
-		switch arg := input.(type) {
-		case string:
-			inputBytes = []byte(arg)
-		case []byte:
-			inputBytes = arg
-		case *ed25519.Scalar:
-			inputBytes = arg.Bytes()
-		case *ed25519.Point:
-			inputBytes = arg.Bytes()
-		default:
-			panic("invalid hash input type")
-		}
-
-		_, err = h.Write(inputBytes)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return h.Sum(nil), nil
 }
 
 func genJamtisSpendKeyExtension(

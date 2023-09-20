@@ -43,38 +43,38 @@ func TestJamtisKeys(t *testing.T) {
 	masterKey, err := hex.DecodeString(tc.masterKey)
 	require.NoError(t, err)
 
-	viewBalanceKey, err := genViewBalanceKey(masterKey)
+	viewBalanceKey, err := GenViewBalancePrivKey(masterKey)
 	require.NoError(t, err)
 	require.Equal(t, tc.viewBalanceKey, hex.EncodeToString(viewBalanceKey))
 
-	unlockAmountsPrivKey, err := genUnlockAmountsKey(viewBalanceKey)
+	unlockAmountsPrivKey, err := GenUnlockAmountsPrivKey(viewBalanceKey)
 	require.NoError(t, err)
 	require.Equal(t, tc.unlockAmountsKey, hex.EncodeToString(unlockAmountsPrivKey))
 
-	findReceivedPrivKey, err := genFindReceivedKey(viewBalanceKey)
+	findReceivedPrivKey, err := GenFindReceivedPrivKey(viewBalanceKey)
 	require.NoError(t, err)
 	require.Equal(t, tc.findReceivedKey, hex.EncodeToString(findReceivedPrivKey))
 
-	genAddressSecret, err := genGenAddressSecret(viewBalanceKey)
+	genAddressSecret, err := GenGenAddressSecret(viewBalanceKey)
 	require.NoError(t, err)
 	require.Equal(t, tc.generateAddressSecret, hex.EncodeToString(genAddressSecret))
 
-	cipherTagSecret, err := genCipherTagSecret(genAddressSecret)
+	cipherTagSecret, err := GenCipherTagSecret(genAddressSecret)
 	require.NoError(t, err)
 	require.Equal(t, tc.cipherTagSecret, hex.EncodeToString(cipherTagSecret))
 
-	spendKeyBase, err := genSeraphisSpendKey(viewBalanceKey, masterKey)
+	spendKeyBase, err := GenSeraphisSpendKey(viewBalanceKey, masterKey)
 	require.NoError(t, err)
 	require.Equal(t, tc.jamtisSpendKeyBase, hex.EncodeToString(spendKeyBase))
 
-	unlockAmountsPubKey := genUnlockAmountsPubKey(unlockAmountsPrivKey)
+	unlockAmountsPubKey := GenUnlockAmountsPubKey(unlockAmountsPrivKey)
 	require.Equal(t, tc.unlockAmountsPubKey, hex.EncodeToString(unlockAmountsPubKey))
 
-	findReceivedPubKey := genFindReceivedPubKey(findReceivedPrivKey, unlockAmountsPubKey)
+	findReceivedPubKey := GenFindReceivedPubKey(findReceivedPrivKey, unlockAmountsPubKey)
 	require.Equal(t, tc.findReceivedPubKey, hex.EncodeToString(findReceivedPubKey))
 
-	j := [16]byte{1}
-	address, err := genJamtisAddressV1(spendKeyBase, unlockAmountsPubKey, findReceivedPubKey, genAddressSecret, j[:])
+	j := [AddressIndexLen]byte{1}
+	address, err := GenJamtisAddressV1(spendKeyBase, unlockAmountsPubKey, findReceivedPubKey, genAddressSecret, j[:])
 	require.NoError(t, err)
 	require.Equal(t, tc.addressK1, hex.EncodeToString(address.K1[:]))
 	require.Equal(t, tc.addressK2, hex.EncodeToString(address.K2[:]))

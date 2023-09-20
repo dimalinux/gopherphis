@@ -32,8 +32,8 @@ func getXPoint() *ed25519.Point {
 	return X
 }
 
-// genSeraphisSpendKey returns the ed25519 calculation viewBalance*X + masterKey*U
-func genSeraphisSpendKey(viewBalanceKey []byte, masterKey []byte) ([]byte, error) {
+// GenSeraphisSpendKey returns the ed25519 calculation viewBalance*X + masterKey*U
+func GenSeraphisSpendKey(viewBalanceKey []byte, masterKey []byte) ([]byte, error) {
 	// Normally, you would call SetBytesWithClamping to get the reduced values,
 	// but it has additional bit modifications that are incompatible with
 	// Monero, so we do the reduce ourselves and call SetCanonicalBytes instead.
