@@ -1,9 +1,8 @@
-<div style="display: flex; justify-content: center; background-color: black">
-    <h1 style="color: yellow;">Gopherphis</h1>
-    <a href="https://github.com/dimalinux/gopherphis/assets/787418/e1e6189e-96e2-4f2c-bace-cdb2e9a1340f">
-        <img style="margin:16px;" width="200" alt="Gopherphis Godscot" title="Gopherphis Godscot" src="https://github.com/dimalinux/gopherphis/assets/787418/e1e6189e-96e2-4f2c-bace-cdb2e9a1340f">
-    </a>
-</div>
+# Gopherphis
+
+<a href="https://github.com/dimalinux/gopherphis/assets/787418/e1e6189e-96e2-4f2c-bace-cdb2e9a1340f">
+    <img height="200" alt="Gopherphis Godscot" title="Gopherphis Godscot" src="https://github.com/dimalinux/gopherphis/assets/787418/e1e6189e-96e2-4f2c-bace-cdb2e9a1340f">
+</a>
 
 While some wallets may get left behind when Monero switches to the Seraphis
 protocol and Jamtis addressing, this new wallet written in pure Go will be ready
